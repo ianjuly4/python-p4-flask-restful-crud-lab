@@ -41,19 +41,25 @@ class TestPlant:
         assert(data["is_in_stock"] == False)
 
     def test_plant_by_id_delete_route_deletes_plant(self):
-        '''returns JSON representing updated Plant object at "/plants/<int:id>".'''
-        with app.app_context():
-            lo = Plant(
-                name="Live Oak",
-                image="https://www.nwf.org/-/media/NEW-WEBSITE/Shared-Folder/Wildlife/Plants-and-Fungi/plant_southern-live-oak_600x300.ashx",
-                price=250.00,
-                is_in_stock=False,
-            )
+        '''returns JSON message confirming deletion of Plant object at "/plants/<int:id>".'''
+    with app.app_context():
+        lo = Plant(
+            name="Live Oak",
+            image="https://www.nwf.org/-/media/NEW-WEBSITE/Shared-Folder/Wildlife/Plants-and-Fungi/plant_southern-live-oak_600x300.ashx",
+            price=250.00,
+            is_in_stock=False,
+        )
 
-            db.session.add(lo)
-            db.session.commit()
-            
-            response = app.test_client().delete(f'/plants/{lo.id}')
-            data = response.data.decode()
+        db.session.add(lo)
+        db.session.commit()
 
-            assert(not data)
+        response = app.test_client().delete(f'/plants/{lo.id}')
+        data = response.data.decode()
+
+        response_json = json.loads(data)
+        assert response_json == {"message": "Plant deleted successfully"}
+        assert response.status_code == 200
+
+        # Use session.get() to check if the plant is deleted
+        deleted_plant = db.session.get(Plant, lo.id)
+        assert deleted_plant is None
